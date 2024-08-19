@@ -16,6 +16,9 @@ on:
           - "media/by-month/2024/2024-08"
           - "media/by-month/2024/2024-07"
           - "media/by-month/2024/2024-06"
+          - "media/by-year/2024"
+          - "media/by-year/2023"
+          - "media/by-year/2022"
       destremote:
         description: "REMOTE-DEST"
         default: ""
@@ -94,6 +97,6 @@ jobs:
           name: rclonecloud-artifact-${{ env.NOWDATE }}-${{ github.run_id }}
           path: |
             ./.artifact
-            ./${{ env.REPO_RCLONE_CONFIGS }}
+            !./${{ env.REPO_RCLONE_CONFIGS }}
             # !path/**/*.tmp
           retention-days: 5
