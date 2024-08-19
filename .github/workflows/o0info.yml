@@ -1,0 +1,98 @@
+name: o0info
+on:
+  workflow_dispatch:
+    inputs:
+      srcremote:
+        description: "REMOTE-SOURCE"
+        default: ""
+        type: choice
+        options:
+          - "googlephotos-services-ongtrieuhau861.ip13pm@gmail.com"
+      srcpath:
+        description: "SOURCE-PATH"
+        default: ""
+        type: choice
+        options:
+          - "media/by-month/2024/2024-08"
+          - "media/by-month/2024/2024-07"
+          - "media/by-month/2024/2024-06"
+      destremote:
+        description: "REMOTE-DEST"
+        default: ""
+        type: choice
+        options:
+          - "googlephoto-ip13photo.001@gmail.com"
+jobs:
+  o0info:
+    runs-on: ubuntu-latest
+    steps:
+      # Set the organization/repository name to an environment variable
+      - name: Set environment variables
+        run: |
+          echo "REPO_OWNER=${{ github.repository_owner }}" >> $GITHUB_ENV
+          echo "REPO_RCLONE_BIN=rclone-bin" >> $GITHUB_ENV
+          echo "REPO_RCLONE_CONFIGS=rclone-configs" >> $GITHUB_ENV
+
+      # Check out repo (public)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Checkout tools repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.REPO_OWNER }}/${{ env.REPO_RCLONE_BIN }}
+          path: ${{ env.REPO_RCLONE_BIN }}
+      # Check out repo (private)
+      - name: Checkout private tools
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.REPO_OWNER }}/${{ env.REPO_RCLONE_CONFIGS }}
+          token: ${{ secrets.GH_PAT }} # `GH_PAT` is a secret that contains your PAT
+          path: ${{ env.REPO_RCLONE_CONFIGS }}
+
+      # Append all rclone config files
+      - name: Append all rclone config files
+        run: |
+          # Create output file if it doesn't exist
+          touch ./rclone.conf
+
+          # Change to the directory containing rclone config files
+          cd ${{ env.REPO_RCLONE_CONFIGS }}
+
+          # Find all config files and append them into one file with a newline between files
+          find . -type f -name "*.conf" -print0 | while IFS= read -r -d '' file; do
+            cat "$file" >> ./rclone.conf
+            echo -e "\n" >> ./rclone.conf
+          done
+
+      # List all files and directories
+      - name: List all files and directories
+        run: |
+          mkdir -p ./.artifact
+          ls -R > ./.artifact/all_files_and_dirs.txt
+          ls -R
+
+      # Install rclone offline
+      - name: Install rclone offline
+        run: |
+          sudo cp ./${{ env.REPO_RCLONE_BIN }}/rclone /usr/bin/
+          sudo cp ./${{ env.REPO_RCLONE_BIN }}/rclone.1 /usr/bin/
+          sudo chmod +x /usr/bin/rclone
+          sudo chmod +x /usr/bin/rclone.1
+          rclone version
+
+      # Excute main
+      - name: Excute main
+        run: |
+          rclone lsjson ${{ github.event.inputs.srcremote }}:${{ github.event.inputs.srcpath }} --config ./${{ env.REPO_RCLONE_CONFIGS }}/rclone.conf
+
+      # Upload Artifact store log
+      - name: "Upload Artifact"
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rclonecloud-artifact-${{ env.NOWDATE }}-${{ github.run_id }}
+          path: |
+            ./.artifact
+            !./${{ env.REPO_RCLONE_CONFIGS }}
+            # !path/**/*.tmp
+          retention-days: 5
