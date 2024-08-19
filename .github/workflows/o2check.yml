@@ -35,6 +35,8 @@ jobs:
           echo "REPO_OWNER=${{ github.repository_owner }}" >> $GITHUB_ENV
           echo "REPO_RCLONE_BIN=rclone-bin" >> $GITHUB_ENV
           echo "REPO_RCLONE_CONFIGS=rclone-configs" >> $GITHUB_ENV
+          TZ='Asia/Bangkok' date +'%Y%m%d-%H%M' > date.txt
+          echo "NOWDATE=$(cat date.txt)" >> $GITHUB_ENV
 
       # Check out repo (public)
       - name: Checkout repository
