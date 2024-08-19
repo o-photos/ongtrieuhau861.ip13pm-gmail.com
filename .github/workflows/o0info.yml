@@ -16,6 +16,7 @@ on:
           - "media/by-month/2024/2024-08"
           - "media/by-month/2024/2024-07"
           - "media/by-month/2024/2024-06"
+          - "media/all"
       destremote:
         description: "REMOTE-DEST"
         default: ""
