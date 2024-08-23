@@ -71,12 +71,9 @@ jobs:
 
       # Excute main
       - name: Excute main
+        continue-on-error: true
         run: |
-          # Tạm thời tắt chế độ dừng script khi có lỗi
-          set +e
           rclone check --one-way ${{ env.SRCREMOTE }}:media/by-day/${{ env.YEAR }}/${{ env.DATEPHOTO }} ${{ env.DESTREMOTE }}:media/all --config ./${{ env.REPO_RCLONE_CONFIGS }}/rclone.conf --missing-on-dst ./.artifact/missing-on-dst.txt
-          # Bật lại chế độ dừng script khi có lỗi
-          set -e
 
           # Kiểm tra xem file 'missing-on-dst.txt' có nội dung hay không
           if [ -s ./.artifact/missing-on-dst.txt ]; then
