@@ -1,11 +1,11 @@
-name: o3copyDaily
+name: o3all
 on:
   workflow_dispatch:
   # Chạy tự động mỗi 30 phút
   schedule:
     - cron: "*/5 * * * *"
 jobs:
-  o3copyDaily:
+  o3all:
     runs-on: ubuntu-latest
     steps:
       # Set the organization/repository name to an environment variable
@@ -73,17 +73,19 @@ jobs:
       - name: Excute main by check
         continue-on-error: true
         run: |
-          rclone check --one-way ${{ env.SRCREMOTE }}:media/by-day/${{ env.YEAR }}/${{ env.DATEPHOTO }} ${{ env.DESTREMOTE }}:media/all --config ./${{ env.REPO_RCLONE_CONFIGS }}/rclone.conf --missing-on-dst ./.artifact/missing-on-dst.txt
+          rclone check --one-way ${{ env.SRCREMOTE }}:media/all ${{ env.DESTREMOTE }}:media/all --config ./${{ env.REPO_RCLONE_CONFIGS }}/rclone.conf --missing-on-dst ./.artifact/missing-on-dst.txt
+
       # Excute main by copy
       - name: Excute main by copy
         run: |
           # Kiểm tra xem file 'missing-on-dst.txt' có nội dung hay không
           if [ -s ./.artifact/missing-on-dst.txt ]; then
               echo "Có file bị thiếu, tiến hành copy..."
-              rclone copy --auto-confirm --verbose ${{ env.SRCREMOTE }}:media/by-day/${{ env.YEAR }}/${{ env.DATEPHOTO }} ${{ env.DESTREMOTE }}:upload --config ./${{ env.REPO_RCLONE_CONFIGS }}/rclone.conf
+              rclone copy --auto-confirm --verbose ${{ env.SRCREMOTE }}:media/all ${{ env.DESTREMOTE }}:upload --config ./${{ env.REPO_RCLONE_CONFIGS }}/rclone.conf --files-from ./.artifact/missing-on-dst.txt
           else
               echo "Không có file bị thiếu, không cần copy."
           fi
+
       # Upload Artifact store log
       - name: "Upload Artifact"
         uses: actions/upload-artifact@v4
